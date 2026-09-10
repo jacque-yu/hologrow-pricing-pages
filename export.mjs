@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {load} from 'cheerio';
 const out=new URL('./docs/',import.meta.url).pathname;
-const origin='https://hologrow.github.io/hologrow-pricing-pages';
+const origin='https://jacque-yu.github.io/hologrow-pricing-pages';
 const source=process.env.HOLOGROW_SOURCE_DIR;
 if(!source) throw new Error('Set HOLOGROW_SOURCE_DIR to the built Hologrow source directory.');
 const base='/hologrow-pricing-pages';
@@ -34,5 +34,12 @@ for(const url of assets){const target=out+decodeURIComponent(url.split('?')[0]);
 for(const url of assets){if(url.endsWith('.css')){const f=out+decodeURIComponent(url);let css=await fs.readFile(f,'utf8');css=css.replace(/url\((["']?)\/(?!\/)/g, 'url($1'+base+'/');await fs.writeFile(f,css);}}
 await fs.writeFile(out+'/.nojekyll','');
 await fs.copyFile(out+'/pricing-zh.html',out+'/index.html');
-await fs.writeFile(out+'/robots.txt','User-agent: *\nAllow: /\n');
+const sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">' + Object.entries(routes).map(([route, file]) => {
+ const path = route.replace(/^\/zh/, '');
+ const en = origin + routes[path];
+ const zh = origin + routes['/zh' + path];
+ return `<url><loc>${origin}${file}</loc><xhtml:link rel="alternate" hreflang="en" href="${en}"/><xhtml:link rel="alternate" hreflang="zh" href="${zh}"/><xhtml:link rel="alternate" hreflang="x-default" href="${en}"/></url>`;
+}).join('') + '</urlset>\n';
+await fs.writeFile(out+'/sitemap.xml', sitemap);
+await fs.writeFile(out+'/robots.txt',`User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`);
 console.log('Exported four localized pages and '+assets.size+' local assets.');

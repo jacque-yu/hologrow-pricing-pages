@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://jacque-yu.github.io/hologrow-pricing-pages/sitemap.xml
